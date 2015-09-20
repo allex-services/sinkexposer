@@ -1,0 +1,21 @@
+{
+  "name": "allex_sinkexposerservice",
+  "version": "0.1.0",
+  "description": "SinkExposerService",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.hers.rs:allex_services/sinkexposer.git"
+  },
+  "keywords": [
+    "ecosystem:allex",
+    "Service",
+    "SinkExposer"
+  ],
+  "author": "HERS Belgrade",
+  "license": "ISC"
+}
+
