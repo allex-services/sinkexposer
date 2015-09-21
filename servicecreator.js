@@ -37,7 +37,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
     //dangerous? alternative solution: introduce getModuleName method on the Service class and adjust all other software to use it
     this.modulename = sink.modulename;
     //TODO: now handle all the waiting logins etc
-    console.log('outerSink set, now comes maintenance', sink.role, sink.modulename, sink.clientuser.__methodDescriptors, sink);
+    //console.log('outerSink set, now comes maintenance', sink.role, sink.modulename, sink.clientuser.__methodDescriptors);
     while (this.waitingIdentities.length) {
       var wi = this.waitingIdentities.shift();
       wi[1].resolve(this.introduceUser(wi[0])); //the problem here is I need to be 100% sure that introduceUser will _not_ return a promise.
@@ -57,12 +57,16 @@ function createSinkExposerService(execlib, ParentServicePack) {
   var _have = 'have';
 
   SinkExposerService.prototype.onOOBData = function (item) {
-    console.log('outerSink oob item', item);
+    //console.log('outerSink oob item', item);
     if (item && item[1] === 's') {
-      if(item[2] && item[2].p && item[2].p.indexOf(_have) === 0) {
-        //haveXXX items should not be blindly copied, 
-        //but appropriate subServices should be set instead
-        this.exposeSubSink(item[2].p.substr(_have.length)); 
+      if(item[2] && item[2].p && item[2].p.length && item[2].p[0].indexOf(_have) === 0) {
+        if (item[2].d) {
+          //haveXXX items should not be blindly copied, 
+          //but appropriate subServices should be set instead
+          this.exposeSubSink(item[2].p[0].substr(_have.length)); 
+        } else {
+          this._onStaticallyStartedSubServiceDown(item[2].p[0].substr(_have.length));
+        }
       } else {
         this.state.onStream(item);
       }
@@ -70,7 +74,10 @@ function createSinkExposerService(execlib, ParentServicePack) {
   };
 
   SinkExposerService.prototype.exposeSubSink = function (subsinkname) {
-    console.log('should start subservice', subsinkname);
+    this.outerSink.subConnect(subsinkname,{name: 'user'}, {}).then(
+      this._activateStaticSubService.bind(this, subsinkname),
+      console.error.bind(console, subsinkname, 'nok')
+    );
   };
 
   return SinkExposerService;
