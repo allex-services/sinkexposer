@@ -4,7 +4,8 @@ function createSinkExposerService(execlib, ParentServicePack) {
     q = lib.q,
     execSuite = execlib.execSuite,
     registry = execSuite.registry,
-    ParentService = ParentServicePack.Service;
+    ParentService = ParentServicePack.Service,
+    stubUserCreator = require('./stubusercreatorcreator')(execlib);
 
   function factoryCreator(parentFactory) {
     return {
@@ -15,6 +16,11 @@ function createSinkExposerService(execlib, ParentServicePack) {
 
   function SinkExposerService(prophash) {
     ParentService.call(this, prophash);
+    var originalFactory = new lib.Map();
+    this.originalFactory = originalFactory;
+    this.userFactory.traverse(function(item, itemname) {
+      originalFactory.add(itemname, item);
+    });
     this.outerSinkDestroyedListener = null;
     this.waitingIdentities = [];
     this.obtainOuterSink();
@@ -31,6 +37,8 @@ function createSinkExposerService(execlib, ParentServicePack) {
       this.state.remove('outerSink');
       outerSink.destroy();
     }
+    this.originalFactory.destroy();
+    this.originalFactory = null;
     ParentService.prototype.__cleanUp.call(this);
   };
 
@@ -53,7 +61,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   SinkExposerService.prototype.onServicePack = function (sink, servicepack) {
     var role = sink.role,
       userctor = servicepack.Service.prototype.userFactory.get(role);
-    this.userFactory.replace(role,userctor);
+    this.userFactory.replace(role,stubUserCreator(this.originalFactory.get(role)||this.originalFactory.get('user'), userctor, sink));
     //dangerous? alternative solution: introduce getModuleName method on the Service class and adjust all other software to use it
     this.modulename = sink.modulename;
     //TODO: now handle all the waiting logins etc
@@ -97,6 +105,15 @@ function createSinkExposerService(execlib, ParentServicePack) {
     outerSink.subConnect(subsinkname,{name: 'user'}, {}).then(
       this._activateStaticSubService.bind(this, subsinkname),
       console.error.bind(console, subsinkname, 'nok')
+    );
+  });
+
+  SinkExposerService.prototype.forwardMethod = execSuite.dependentServiceMethod([], ['outerSink'], function (outerSink, args, defer) {
+    console.log('will forwardMethod', args);
+    outerSink.call.apply(outerSink, args).done(
+      defer.resolve.bind(defer),
+      defer.reject.bind(defer),
+      defer.notify.bind(defer)
     );
   });
 
