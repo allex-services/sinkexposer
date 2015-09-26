@@ -3,6 +3,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   var lib = execlib.lib,
     q = lib.q,
     execSuite = execlib.execSuite,
+    registry = execSuite.registry,
     ParentService = ParentServicePack.Service;
 
   function factoryCreator(parentFactory) {
@@ -44,6 +45,15 @@ function createSinkExposerService(execlib, ParentServicePack) {
     }
     this.state.set('outerSink', sink);
     this.outerSinkDestroyedListener = sink.destroyed.attach(this.obtainOuterSink.bind(this));
+    registry.register(sink.modulename).then(
+      this.onServicePack.bind(this, sink),
+      this.close.bind(this)
+    );
+  };
+  SinkExposerService.prototype.onServicePack = function (sink, servicepack) {
+    var role = sink.role,
+      userctor = servicepack.Service.prototype.userFactory.get(role);
+    this.userFactory.replace(role,userctor);
     //dangerous? alternative solution: introduce getModuleName method on the Service class and adjust all other software to use it
     this.modulename = sink.modulename;
     //TODO: now handle all the waiting logins etc
