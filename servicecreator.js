@@ -2,6 +2,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   'use strict';
   var lib = execlib.lib,
     q = lib.q,
+    execSuite = execlib.execSuite,
     ParentService = ParentServicePack.Service;
 
   function factoryCreator(parentFactory) {
@@ -13,7 +14,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
 
   function SinkExposerService(prophash) {
     ParentService.call(this, prophash);
-    this.outerSink = null;
+    this.outerSinkDestroyedListener = null;
     this.waitingIdentities = [];
     this.obtainOuterSink();
   }
@@ -21,19 +22,28 @@ function createSinkExposerService(execlib, ParentServicePack) {
   ParentService.inherit(SinkExposerService, factoryCreator);
   
   SinkExposerService.prototype.__cleanUp = function() {
-    if (this.outerSink) {
-      lib.destroyASAP(this.outerSink);
+    var outerSink = this.state.get('outerSink');
+    if (this.outerSinkDestroyedListener) {
+      this.outerSinkDestroyedListener.destroy();
     }
-    this.outerSink = null;
+    if (outerSink) {
+      this.state.remove('outerSink');
+      outerSink.destroy();
+    }
     ParentService.prototype.__cleanUp.call(this);
   };
 
   SinkExposerService.prototype.setOuterSink = function (sink) {
-    this.outerSink = sink;
+    if (this.outerSinkDestroyedListener) {
+      this.outerSinkDestroyedListener.destroy();
+    }
     if (!sink) {
+      this.state.remove('outerSink');
       //destroy all non-service role users?
       return;
     }
+    this.state.set('outerSink', sink);
+    this.outerSinkDestroyedListener = sink.destroyed.attach(this.obtainOuterSink.bind(this));
     //dangerous? alternative solution: introduce getModuleName method on the Service class and adjust all other software to use it
     this.modulename = sink.modulename;
     //TODO: now handle all the waiting logins etc
@@ -46,7 +56,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   };
 
   SinkExposerService.prototype.introduceUser = function (userhash) {
-    if (!this.outerSink) {
+    if (!this.state.get('outerSink')) {
       var d = q.defer();
       this.waitingIdentities.push([userhash,d]);
       return d.promise;
@@ -73,12 +83,12 @@ function createSinkExposerService(execlib, ParentServicePack) {
     }
   };
 
-  SinkExposerService.prototype.exposeSubSink = function (subsinkname) {
-    this.outerSink.subConnect(subsinkname,{name: 'user'}, {}).then(
+  SinkExposerService.prototype.exposeSubSink = execSuite.dependentServiceMethod([],['outerSink'], function (outerSink, subsinkname) {
+    outerSink.subConnect(subsinkname,{name: 'user'}, {}).then(
       this._activateStaticSubService.bind(this, subsinkname),
       console.error.bind(console, subsinkname, 'nok')
     );
-  };
+  });
 
   return SinkExposerService;
 }
