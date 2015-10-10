@@ -109,7 +109,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   });
 
   SinkExposerService.prototype.forwardMethod = execSuite.dependentServiceMethod([], ['outerSink'], function (outerSink, args, defer) {
-    console.log('will forwardMethod', args);
+    //console.log('will forwardMethod', args);
     outerSink.call.apply(outerSink, args).done(
       defer.resolve.bind(defer),
       defer.reject.bind(defer),
