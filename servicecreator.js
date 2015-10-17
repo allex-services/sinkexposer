@@ -14,13 +14,14 @@ function createSinkExposerService(execlib, ParentServicePack) {
     };
   }
 
+  function copier(newfactory, item, itemname) {
+    newfactory.add(itemname, item);
+  }
   function SinkExposerService(prophash) {
     ParentService.call(this, prophash);
-    var originalFactory = new lib.Map();
-    this.originalFactory = originalFactory;
-    this.userFactory.traverse(function(item, itemname) {
-      originalFactory.add(itemname, item);
-    });
+    this.originalFactory = this.userFactory;
+    this.userFactory = new lib.Map();
+    this.originalFactory.traverse(copier.bind(null, this.userFactory));
     this.outerSinkDestroyedListener = null;
     this.waitingIdentities = [];
     this.obtainOuterSink();
@@ -37,7 +38,8 @@ function createSinkExposerService(execlib, ParentServicePack) {
       this.state.remove('outerSink');
       outerSink.destroy();
     }
-    this.originalFactory.destroy();
+    this.userFactory.destroy();
+    this.userFactory = null;
     this.originalFactory = null;
     ParentService.prototype.__cleanUp.call(this);
   };
@@ -63,6 +65,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
       userctor = servicepack.Service.prototype.userFactory.get(role);
     this.userFactory.replace(role,stubUserCreator(this.originalFactory.get(role)||this.originalFactory.get('user'), userctor, sink));
     //dangerous? alternative solution: introduce getModuleName method on the Service class and adjust all other software to use it
+    //console.log(process.pid, this.subSinkName ? this.subSinkName : '', 'mutating from', this.modulename, 'to', sink.modulename);
     this.modulename = sink.modulename;
     //TODO: now handle all the waiting logins etc
     //console.log('outerSink set, now comes maintenance', sink.role, sink.modulename, sink.clientuser.__methodDescriptors);
@@ -85,8 +88,10 @@ function createSinkExposerService(execlib, ParentServicePack) {
   var _have = 'have';
 
   SinkExposerService.prototype.onOOBData = function (item) {
-    //console.log('outerSink oob item', item);
-    if (item && item[1] === 's') {
+    if (!item) {
+      return;
+    }
+    if (item[1] === 's') {
       if(item[2] && item[2].p && item[2].p.length && item[2].p[0].indexOf(_have) === 0) {
         if (item[2].d) {
           //haveXXX items should not be blindly copied, 
@@ -96,16 +101,13 @@ function createSinkExposerService(execlib, ParentServicePack) {
           this._onStaticallyStartedSubServiceDown(item[2].p[0].substr(_have.length));
         }
       } else {
-        this.state.onStream(item);
+        this.state.onStream(item[2]);
       }
     }
   };
 
   SinkExposerService.prototype.exposeSubSink = execSuite.dependentServiceMethod([],['outerSink'], function (outerSink, subsinkname) {
-    outerSink.subConnect(subsinkname,{name: 'user'}, {}).then(
-      this._activateStaticSubService.bind(this, subsinkname),
-      console.error.bind(console, subsinkname, 'nok')
-    );
+    this.startSubServiceStatically('allex_subsinkexposerservice', subsinkname, {parentsink: outerSink, subsinkname: subsinkname});
   });
 
   SinkExposerService.prototype.forwardMethod = execSuite.dependentServiceMethod([], ['outerSink'], function (outerSink, args, defer) {
