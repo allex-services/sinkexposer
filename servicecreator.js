@@ -88,6 +88,9 @@ function createSinkExposerService(execlib, ParentServicePack) {
   var _have = 'have';
 
   SinkExposerService.prototype.onOOBData = function (item) {
+    if (!this.state) {
+      return;
+    }
     if (!item) {
       return;
     }
