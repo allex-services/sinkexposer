@@ -60,10 +60,16 @@ function createSinkExposerService(execlib, ParentServicePack) {
       this.close.bind(this)
     );
   };
-  SinkExposerService.prototype.onServicePack = function (sink, servicepack) {
-    var role = sink.role,
-      userctor = servicepack.Service.prototype.userFactory.get(role);
+  SinkExposerService.prototype.setUserRoleCtor = function(sink, userctor, role) {
     this.userFactory.replace(role,stubUserCreator(this.originalFactory.get(role)||this.originalFactory.get('user'), userctor, sink));
+  };
+  SinkExposerService.prototype.onServicePack = function (sink, servicepack) {
+    try {
+    servicepack.Service.prototype.userFactory.traverse(this.setUserRoleCtor.bind(this, sink));
+    } catch (e) {
+      console.error(e.stack);
+      console.error(e);
+    }
     //dangerous? alternative solution: introduce getModuleName method on the Service class and adjust all other software to use it
     //console.log(process.pid, this.subSinkName ? this.subSinkName : '', 'mutating from', this.modulename, 'to', sink.modulename);
     this.modulename = sink.modulename;

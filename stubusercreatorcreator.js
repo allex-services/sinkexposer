@@ -55,6 +55,8 @@ function createStubUserCreator(execlib) {
     //console.log('will call User.inherit with', StubUser, sink.clientuser.__methodDescriptors, User.stateFilter);
     GenericUser.inherit(StubUser, sink.clientuser.__methodDescriptors, User.stateFilter);
     StubUser.prototype.modulename = sink.modulename;
+    StubUser.prototype.role = User.prototype.role;
+    StubUser.stateFilter = User.stateFilter;
     lib.traverseShallow(sink.clientuser.__methodDescriptors,methodAdder.bind(null, StubUser, sink));
     return StubUser;
     } catch (e) {
