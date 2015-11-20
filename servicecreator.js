@@ -15,7 +15,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   }
 
   function copier(newfactory, item, itemname) {
-    newfactory.add(itemname, item);
+    newfactory.add(itemname, lib.functionCopy(item));
   }
   function SinkExposerService(prophash) {
     ParentService.call(this, prophash);
@@ -54,7 +54,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
       return;
     }
     this.state.set('outerSink', sink);
-    this.outerSinkDestroyedListener = sink.destroyed.attach(this.obtainOuterSink.bind(this));
+    this.outerSinkDestroyedListener = sink.destroyed.attach(this.onOuterSinkDown.bind(this));
     registry.register(sink.modulename).then(
       this.onServicePack.bind(this, sink),
       this.close.bind(this)
@@ -62,6 +62,10 @@ function createSinkExposerService(execlib, ParentServicePack) {
   };
   SinkExposerService.prototype.setUserRoleCtor = function(sink, userctor, role) {
     this.userFactory.replace(role,stubUserCreator(this.originalFactory.get(role)||this.originalFactory.get('user'), userctor, sink));
+  };
+  SinkExposerService.prototype.onOuterSinkDown = function () {
+    this.state.remove('outerSink');
+    this.obtainOuterSink();
   };
   SinkExposerService.prototype.onServicePack = function (sink, servicepack) {
     try {
@@ -83,6 +87,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   };
 
   SinkExposerService.prototype.introduceUser = function (userhash) {
+    console.log(this.subSinkName, 'introduceUser',this.state.get('outerSink') ? 'with' : 'without', 'outerSink');
     if (!this.state.get('outerSink')) {
       var d = q.defer();
       this.waitingIdentities.push([userhash,d]);
