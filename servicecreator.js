@@ -87,7 +87,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   };
 
   SinkExposerService.prototype.introduceUser = function (userhash) {
-    console.log(this.subSinkName, 'introduceUser',this.state.get('outerSink') ? 'with' : 'without', 'outerSink');
+    //console.log(this.subSinkName, 'introduceUser',this.state.get('outerSink') ? 'with' : 'without', 'outerSink');
     if (!this.state.get('outerSink')) {
       var d = q.defer();
       this.waitingIdentities.push([userhash,d]);
