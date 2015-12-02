@@ -125,7 +125,19 @@ function createSinkExposerService(execlib, ParentServicePack) {
   });
 
   SinkExposerService.prototype.forwardMethod = execSuite.dependentServiceMethod([], ['outerSink'], function (outerSink, args, defer) {
-    //console.log('will forwardMethod', args);
+    console.log('will forwardMethod', args, defer);
+    if (!(args && args.length)) {
+      console.error('NO_ARGUMENTS_PROVIDED for forwardMethod');
+      return q.reject(new lib.Error('NO_ARGUMENTS_PROVIDED'));
+    }
+    if (!defer) {
+      console.error('ARGUMENTS_LENGTH_MISMATCH for', (args && args.length) ? args[0] : args);
+      return q.reject(new lib.Error('ARGUMENTS_LENGTH_MISMATCH'));
+    }
+    if (!q.isPromise(defer.promise)){
+      console.error('ARGUMENTS_LENGTH_MISMATCH for', (args && args.length) ? args[0] : args);
+      return q.reject(new lib.Error('ARGUMENTS_LENGTH_MISMATCH'));
+    }
     outerSink.call.apply(outerSink, args).done(
       defer.resolve.bind(defer),
       defer.reject.bind(defer),
