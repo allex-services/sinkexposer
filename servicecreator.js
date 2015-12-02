@@ -125,7 +125,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   });
 
   SinkExposerService.prototype.forwardMethod = execSuite.dependentServiceMethod([], ['outerSink'], function (outerSink, args, defer) {
-    console.log('will forwardMethod', args, defer);
+    //console.log('will forwardMethod', args, defer);
     if (!(args && args.length)) {
       console.error('NO_ARGUMENTS_PROVIDED for forwardMethod');
       return q.reject(new lib.Error('NO_ARGUMENTS_PROVIDED'));
