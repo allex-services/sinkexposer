@@ -99,6 +99,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   var _have = 'have';
 
   SinkExposerService.prototype.onOOBData = function (item) {
+    var subservicename, subservicesink;
     if (!this.state) {
       return;
     }
@@ -107,12 +108,17 @@ function createSinkExposerService(execlib, ParentServicePack) {
     }
     if (item[1] === 's') {
       if(item[2] && item[2].p && item[2].p.length && item[2].p[0].indexOf(_have) === 0) {
+        subservicename = item[2].p[0].substr(_have.length);
         if (item[2].d) {
           //haveXXX items should not be blindly copied, 
           //but appropriate subServices should be set instead
-          this.exposeSubSink(item[2].p[0].substr(_have.length)); 
+          this.exposeSubSink(subservicename); 
         } else {
-          this._onStaticallyStartedSubServiceDown(item[2].p[0].substr(_have.length));
+          subservicesink = this.subservices.get(subservicename);
+          if (subservicesink) {
+            subservicesink.destroy();
+            this._onStaticallyStartedSubServiceDown(subservicename);
+          }
         }
       } else {
         this.state.onStream(item[2]);

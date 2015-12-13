@@ -24,6 +24,9 @@ function createUser(execlib, ParentUser) {
   };
 
   User.prototype.purge = function () {
+    if (!this.destroyed) {
+      return;
+    };
     console.log(this.get('name'), this.__service.subSinkName, 'purging self');
     this.sessions.traverse(function (session) {
       session.destroy();
