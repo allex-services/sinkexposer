@@ -29,14 +29,14 @@ function createUser(execlib, ParentUser) {
   };
 
   User.prototype.purge = function () {
-    console.log('remote outerSink is down');
+    //console.log(process.pid, 'remote outerSink is down for', this.get('name'), 'on', this.__service.modulename);
     if (!this.destroyed) {
       console.log('but me ded already');
       return;
     };
-    console.log(this.get('name'), this.__service.subSinkName, 'purging self');
+    //console.log(this.get('name'), this.__service.subSinkName, 'purging self');
     this.sessions.traverse(function (session) {
-      session.destroy();
+      session.startTheDyingProcedure();
     });
   };
 

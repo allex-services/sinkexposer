@@ -112,14 +112,16 @@ function createSinkExposerService(execlib, ParentServicePack) {
         if (item[2].d) {
           //haveXXX items should not be blindly copied, 
           //but appropriate subServices should be set instead
+          //console.log(process.pid, 'going to exposeSubSink', subservicename);
           this.exposeSubSink(subservicename); 
-        } else {
+        }/* else {
           subservicesink = this.subservices.get(subservicename);
           if (subservicesink) {
+            //console.log(process.pid, 'going to kill exposed SubSink', subservicename);
             subservicesink.destroy();
-            this._onStaticallyStartedSubServiceDown(subservicename);
+            //this._onStaticallyStartedSubServiceDown(subservicename);
           }
-        }
+        } */ //no else, subsinkexposer will take care of itself
       } else {
         this.state.onStream(item[2]);
       }
