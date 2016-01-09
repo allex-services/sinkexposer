@@ -45,6 +45,9 @@ function createSinkExposerService(execlib, ParentServicePack) {
   };
 
   SinkExposerService.prototype.setOuterSink = function (sink) {
+    if (!this.destroyed) {
+      return;
+    }
     if (this.outerSinkDestroyedListener) {
       this.outerSinkDestroyedListener.destroy();
     }
