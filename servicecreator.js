@@ -2,6 +2,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   'use strict';
   var lib = execlib.lib,
     q = lib.q,
+    qlib = lib.qlib,
     execSuite = execlib.execSuite,
     registry = execSuite.registry,
     ParentService = ParentServicePack.Service,
@@ -152,11 +153,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
       console.error('ARGUMENTS_LENGTH_MISMATCH for', (args && args.length) ? args[0] : args);
       return q.reject(new lib.Error('ARGUMENTS_LENGTH_MISMATCH'));
     }
-    outerSink.call.apply(outerSink, args).done(
-      defer.resolve.bind(defer),
-      defer.reject.bind(defer),
-      defer.notify.bind(defer)
-    );
+    qlib.promise2defer(outerSink.call.apply(outerSink, args), defer);
   });
 
   return SinkExposerService;
