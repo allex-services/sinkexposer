@@ -29,9 +29,6 @@ function createStubUserCreator(execlib) {
   }
   function methodAdder (StubUser, mdesc, mname) {
     var paramcount = ('object' === typeof mdesc ? Object.keys(mdesc).length : 0);
-    if (mname === 'query') {
-      console.log('User stubbing', mname, paramcount, 'params');
-    }
     switch(paramcount) {
       case 0:
         StubUser.prototype[mname] = new Function('defer', funcbody(paramcount, mname));
