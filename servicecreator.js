@@ -57,7 +57,6 @@ function createSinkExposerService(execlib, ParentServicePack) {
       //destroy all non-service role users?
       return;
     }
-    this.state.set('outerSink', sink);
     this.outerSinkDestroyedListener = sink.destroyed.attach(this.onOuterSinkDown.bind(this));
     registry.register(sink.modulename).then(
       this.onServicePack.bind(this, sink),
@@ -74,6 +73,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
   SinkExposerService.prototype.onServicePack = function (sink, servicepack) {
     try {
     servicepack.Service.prototype.userFactory.traverse(this.setUserRoleCtor.bind(this, sink));
+    this.finalizeSetOuterSink(sink);
     } catch (e) {
       console.error(e.stack);
       console.error(e);
@@ -88,6 +88,9 @@ function createSinkExposerService(execlib, ParentServicePack) {
       wi[1].resolve(this.introduceUser(wi[0])); //the problem here is I need to be 100% sure that introduceUser will _not_ return a promise.
     }
     sink.consumeOOB(this);
+  };
+  SinkExposerService.prototype.finalizeSetOuterSink = function (sink) {
+    this.state.set('outerSink', sink);
   };
 
   SinkExposerService.prototype.introduceUser = function (userhash) {
@@ -139,7 +142,7 @@ function createSinkExposerService(execlib, ParentServicePack) {
     this.startSubServiceStatically('allex_subsinkexposerservice', subsinkname, {parentsink: outerSink, subsinkname: subsinkname});
   });
 
-  SinkExposerService.prototype.forwardMethod = execSuite.dependentServiceMethod([], ['outerSink'], function (outerSink, args, defer) {
+  SinkExposerService.prototype.doForward = execSuite.dependentServiceMethod([], ['outerSink'], function (outerSink, sinkmethod, args, defer) {
     //console.log('will forwardMethod', args, defer);
     if (!(args && args.length)) {
       console.error('NO_ARGUMENTS_PROVIDED for forwardMethod');
@@ -153,8 +156,16 @@ function createSinkExposerService(execlib, ParentServicePack) {
       console.error('ARGUMENTS_LENGTH_MISMATCH for', (args && args.length) ? args[0] : args);
       return q.reject(new lib.Error('ARGUMENTS_LENGTH_MISMATCH'));
     }
-    qlib.promise2defer(outerSink.call.apply(outerSink, args), defer);
+    qlib.promise2defer(outerSink[sinkmethod].apply(outerSink, args), defer);
   });
+
+  SinkExposerService.prototype.forwardMethod = function (args, defer) {
+    return this.doForward('call', args, defer);
+  };
+
+  SinkExposerService.prototype.forwardSessionMethod = function (args, defer) {
+    return this.doForward('sessionCall', args, defer);
+  };
 
   return SinkExposerService;
 }
