@@ -54,8 +54,17 @@ function createStubUserCreator(execlib) {
       case 7:
         StubUser.prototype[mname] = new Function('a','b','c','d','e','f','g','defer', funcbody(paramcount, mname));
         break;
+      case 8:
+        StubUser.prototype[mname] = new Function('a','b','c','d','e','f','g','h','defer', funcbody(paramcount, mname));
+        break;
+      case 9:
+        StubUser.prototype[mname] = new Function('a','b','c','d','e','f','g','h','i','defer', funcbody(paramcount, mname));
+        break;
+      case 10:
+        StubUser.prototype[mname] = new Function('a','b','c','d','e','f','g','h','i','j','defer', funcbody(paramcount, mname));
+        break;
       default:
-        throw new lib.Error('TOO_MANY_INPUT_PARAMETERS', paramcount+' is too much');
+        throw new lib.Error('TOO_MANY_INPUT_PARAMETERS', paramcount+' is too much for '+mname);
     }
   }
 
