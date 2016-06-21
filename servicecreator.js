@@ -1,11 +1,10 @@
-function createSinkExposerService(execlib, ParentServicePack) {
+function createSinkExposerService(execlib, ParentService) {
   'use strict';
   var lib = execlib.lib,
     q = lib.q,
     qlib = lib.qlib,
     execSuite = execlib.execSuite,
     registry = execSuite.registry,
-    ParentService = ParentServicePack.Service,
     stubUserCreator = require('./stubusercreatorcreator')(execlib);
 
   function factoryCreator(parentFactory) {
