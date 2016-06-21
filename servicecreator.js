@@ -57,8 +57,8 @@ function createSinkExposerService(execlib, ParentService) {
       return;
     }
     this.outerSinkDestroyedListener = sink.destroyed.attach(this.onOuterSinkDown.bind(this));
-    registry.register(sink.modulename).then(
-      this.onServicePack.bind(this, sink),
+    registry.registerServerSide(sink.modulename).then(
+      this.onService.bind(this, sink),
       this.close.bind(this)
     );
   };
@@ -69,9 +69,9 @@ function createSinkExposerService(execlib, ParentService) {
     this.state.remove('outerSink');
     this.obtainOuterSink();
   };
-  SinkExposerService.prototype.onServicePack = function (sink, servicepack) {
+  SinkExposerService.prototype.onService = function (sink, service) {
     try {
-    servicepack.Service.prototype.userFactory.traverse(this.setUserRoleCtor.bind(this, sink));
+    service.prototype.userFactory.traverse(this.setUserRoleCtor.bind(this, sink));
     this.finalizeSetOuterSink(sink);
     } catch (e) {
       console.error(e.stack);
