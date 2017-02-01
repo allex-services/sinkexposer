@@ -108,7 +108,7 @@ function createSinkExposerService(execlib, ParentService) {
   var _have = 'have';
 
   SinkExposerService.prototype.onOOBData = function (item) {
-    var subservicename, subservicesink;
+    var subservicename, subservicesink, oobchannel, oobdata;
     if (!this.state) {
       return;
     }
@@ -134,6 +134,19 @@ function createSinkExposerService(execlib, ParentService) {
       } else {
         this.state.onStream(item[2]);
       }
+    } else {
+      oobchannel = item[1];
+      oobdata = item[2];
+      this.users.traverse((user) => {
+        if (user.role !== 'user') {
+          return;
+        }
+        user.sessions.traverse((session) => {
+          session.sendOOB(oobchannel, oobdata);
+        });
+      });
+      oobchannel = null;
+      oobdata = null;
     }
   };
 
